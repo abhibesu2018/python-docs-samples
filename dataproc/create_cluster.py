@@ -21,7 +21,7 @@
 from google.cloud import dataproc_v1 as dataproc
 
 
-def create_cluster(project_id, region, cluster_name):
+def create_cluster(project_id, region, cluster_name,**kwargs):
     """This sample walks a user through creating a Cloud Dataproc cluster
        using the Python client library.
 
@@ -37,23 +37,56 @@ def create_cluster(project_id, region, cluster_name):
     })
 
     # Create the cluster config.
-    cluster = {
-        'project_id': project_id,
-        'cluster_name': cluster_name,
-        'config': {
-            'master_config': {
-                'num_instances': 1,
-                'machine_type_uri': 'n1-standard-1'
+    cluster= {
+            "project_id": project_id,
+            "cluster_name": cluster_name,
+            "config": {
+                "config_bucket": "abhi-dataproc-logs",
+                "gce_cluster_config": {
+                    "zone_uri": "australia-southeast1-b",
+                    "metadata": {
+                        "meta_key": "meta_value"
+                    }
+                },
+                "master_config": {
+                    "num_instances": 1,
+                    "machine_type_uri": "n1-standard-1",
+                    "disk_config": {
+                        "boot_disk_type": "pd-standard",
+                        "boot_disk_size_gb": 15,
+                        "num_local_ssds": 0
+                    },
+                    "accelerators": []
+                },
+                "worker_config": {
+                    "num_instances": 2,
+                    "machine_type_uri": "n1-standard-2",
+                    "disk_config": {
+                        "boot_disk_type": "pd-standard",
+                        "boot_disk_size_gb": 15,
+                        "num_local_ssds": 0
+                    },
+                    "accelerators": []
+                },
+                "software_config": {
+                    "image_version": "1.4-ubuntu18",
+                    "properties": {},
+                    "optional_components": []
+                },
+                "secondary_worker_config": {
+                    "num_instances": 0,
+                    "is_preemptible": True
+                },
+                "initialization_actions": [
+                    {
+                        "executable_file": "gs://abhi-dataproc-logs/init/init.sh"
+                    }
+                ]
             },
-            'worker_config': {
-                'num_instances': 2,
-                'machine_type_uri': 'n1-standard-1'
-            }
-        }
-    }
+         }
 
     # Create the cluster.
-    operation = cluster_client.create_cluster(project_id, region, cluster)
+    operation = cluster_client.create_cluster(project_id, region, cluster,timeout=kwargs['timeout'])
     result = operation.result()
 
     # Output a success message.
